@@ -1,0 +1,19 @@
+{
+	"name": "GMail view entire message",
+	"version": "0.1",
+	"description": "Automatically displays the entire message in GMail.",
+	"content_scripts": [{
+		"matches": [
+			"http://mail.google.com/*",
+			"https://mail.google.com/*"
+		],
+		"js": ["contentscript.js"],
+		"run_at": "document_end",
+		"all_frames": true
+	}],
+	"permissions": [
+		"http://mail.google.com/*",
+		"https://mail.google.com/*"
+	],
+	"manifest_version": 2
+}
