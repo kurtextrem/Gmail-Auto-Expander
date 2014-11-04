@@ -13,26 +13,35 @@
 
 		var vem = document.getElementsByClassName('vem')[0]
 		if (vem !== undefined) {
-			vem.textContent += ' | Expanding...'
-			vem.addEventListener('click', this.request.bind(this, vem.href), false)
+			var a = document.createElement('a')
+			a.href = '#'
+			a.textContent += ' | ' + chrome.i18n.getMessage('expanding') + '...'
+			a.addEventListener('click', this.request.bind(this, vem.href), false)
+			vem.parentElement.appendChild(a)
 
-			this.request(vem.href, function () {
-				vem.textContent += ' | Error while expanding. Click to try again.'
+			this.request(vem.href)
+			.then(function () { a = vem = null }) // prevent memory leak
+			.catch(function () {
+				a.textContent += ' | ' + chrome.i18n.getMessage('error')
 			})
 		}
 	}
 
-	ExpandMessage.prototype.request = function (href, abort) {
-		var xhr = new XMLHttpRequest()
-		xhr.open('GET', href, true)
-		xhr.responseType = 'document'
-		xhr.onreadystatechange = function () {
-			if (xhr.readyState === 4) {
-				document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML
+	ExpandMessage.prototype.request = function (href) {
+		return new Promise(function (resolve, reject) {
+			var xhr = new XMLHttpRequest()
+			xhr.responseType = 'document'
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4) {
+					document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML
+					resolve()
+				}
 			}
-		}
-		xhr.onerror = xhr.onabort = abort
-		xhr.send()
+			xhr.onerror = xhr.onabort = reject
+
+			xhr.open('GET', href, true)
+			xhr.send()
+		})
 	}
 
 	ExpandMessage.prototype.addListener = function () {
