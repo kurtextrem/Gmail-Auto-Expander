@@ -9,25 +9,30 @@
 	}
 
 	ExpandMessage.prototype.init = function () {
-		if (!location.hash.contains('inbox/')) return
+		if (location.hash.indexOf('inbox/') === -1) return
 
 		var vem = document.getElementsByClassName('vem')[0]
 		if (vem !== undefined) {
 			vem.textContent += ' | Expanding...'
+			vem.addEventListener('click', this.request.bind(this, vem.href), false)
 
-			var xhr = new XMLHttpRequest()
-			xhr.open('GET', vem.href, true)
-			xhr.responseType = 'document'
-			xhr.onreadystatechange = function () {
-				if (xhr.readyState === 4) {
-					document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML
-				}
-			}
-			xhr.onerror = xhr.onabort = function () {
-				vem.textContent += ' | Error while expanding.'
-			}
-			xhr.send()
+			this.request(vem.href, function () {
+				vem.textContent += ' | Error while expanding. Click to try again.'
+			})
 		}
+	}
+
+	ExpandMessage.prototype.request = function (href, abort) {
+		var xhr = new XMLHttpRequest()
+		xhr.open('GET', href, true)
+		xhr.responseType = 'document'
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === 4) {
+				document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML
+			}
+		}
+		xhr.onerror = xhr.onabort = abort
+		xhr.send()
 	}
 
 	ExpandMessage.prototype.addListener = function () {
@@ -35,4 +40,4 @@
 	}
 
 	new ExpandMessage()
-} (window)
+} (window);
