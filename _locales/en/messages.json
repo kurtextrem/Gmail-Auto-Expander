@@ -1,0 +1,19 @@
+{
+	"extDesc": {
+		"message": "Automatically expands too long mails in Gmail™.",
+		"description": "Extension description."
+	},
+	"extName": {
+		"message": "Auto expander for Gmail™",
+		"description": "Extension name."
+	},
+
+	"expanding": {
+		"message": "Expanding",
+		"description": "Text when currently expanding."
+	},
+	"error": {
+		"message": "Error while expanding. Click to try again.",
+		"description": "Text when expanding failed."
+	}
+}
