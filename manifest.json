@@ -6,9 +6,9 @@
 	"description": "__MSG_extDesc__",
 	"default_locale": "en",
 	"icons": {
-		"128": "img/icon-256.png",
-		"16": "img/icon-48.png",
-		"48": "img/icon-48.png"
+		"128": "img/icon-128.png",
+		"16": "img/icon-128.png",
+		"48": "img/icon-128.png"
 	},
 	"author": "Jacob Groß (kurtextrem)",
 	"content_scripts": [{
