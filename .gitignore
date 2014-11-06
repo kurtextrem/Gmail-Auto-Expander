@@ -1,1 +1,4 @@
 contentscript1.js
+*.crx
+*.pem
+release
