@@ -13,7 +13,11 @@
 		"description": "Text when currently expanding."
 	},
 	"error": {
-		"message": "Error while expanding. Click to try again.",
+		"message": "Error while expanding.",
 		"description": "Text when expanding failed."
+	},
+	"clickHere": {
+		"message": "Click to try again",
+		"description": "Displayed next to the status message."
 	}
 }

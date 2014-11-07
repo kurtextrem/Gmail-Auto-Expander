@@ -13,7 +13,11 @@
 		"description": "Text when currently expanding."
 	},
 	"error": {
-		"message": "Fehler beim Erweitern. Hier klicken für einen neuen Versuch.",
+		"message": "Fehler beim Erweitern.",
 		"description": "Text when expanding failed."
+	},
+	"clickHere": {
+		"message": "Klicken für erneuten Versuch",
+		"description": "Displayed next to the status message."
 	}
 }
