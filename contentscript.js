@@ -23,7 +23,7 @@
 			this.request(vem.href)
 			.then(function (xhr) {
 				if (location.hash !== savedHash) return // #1
-				document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML // swap content
+				vem.parentElement.innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML // swap content (.a3s)
 				savedHash = a = vem = null // prevent memory leak
 			})
 			.catch(function () {
