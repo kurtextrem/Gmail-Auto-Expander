@@ -13,16 +13,21 @@
 
 		var vem = document.getElementsByClassName('vem')[0]
 		if (vem !== undefined) {
-			var a = document.createElement('a')
-			a.href = '#'
-			a.textContent += ' | ' + chrome.i18n.getMessage('expanding') + '...'
+			var a = document.createElement('a'), savedHash = location.hash
+			a.href = 'javascript:void'
+			a.textContent += '| ' + chrome.i18n.getMessage('expanding') + '... (' + chrome.i18n.getMessage('clickHere') + ')'
+			a.style.paddingLeft = '2px'
 			a.addEventListener('click', this.request.bind(this, vem.href), false)
 			vem.parentElement.appendChild(a)
 
 			this.request(vem.href)
-			.then(function () { a = vem = null }) // prevent memory leak
+			.then(function (xhr) {
+				if (location.hash !== savedHash) return // #1
+				document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML // swap content
+				savedHash = a = vem = null // prevent memory leak
+			})
 			.catch(function () {
-				a.textContent += ' | ' + chrome.i18n.getMessage('error')
+				a.textContent += '| ' + chrome.i18n.getMessage('error') + ' (' + chrome.i18n.getMessage('clickHere') + ')'
 			})
 		}
 	}
@@ -33,8 +38,7 @@
 			xhr.responseType = 'document'
 			xhr.onreadystatechange = function () {
 				if (xhr.readyState === 4) {
-					document.getElementsByClassName('a3s')[0].innerHTML = xhr.responseXML.querySelector('.message table tbody div > font').innerHTML
-					resolve()
+					resolve(xhr)
 				}
 			}
 			xhr.onerror = xhr.onabort = reject
