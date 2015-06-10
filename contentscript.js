@@ -29,21 +29,22 @@
 			var a = document.createElement('a'),
 				savedHash = location.hash
 
-			a.href = 'javascript:void'
+			a.href = 'javascript:null'
 			a.textContent = chrome.i18n.getMessage('expanding') + '... (' + chrome.i18n.getMessage('clickHere') + ')'
 			a.style.paddingLeft = '5px'
 			a.addEventListener('click', this.fetch.bind(this, vem.href), false)
 			vem.parentElement.appendChild(a)
 
 			this.fetch(vem.href)
-			.then(function (xml) {
+			.then(function (xhr) {
 				if (location.hash !== savedHash) return // issue #1
 
-				vem.parentElement.innerHTML = xml.querySelector('.message div > font > div').innerHTML // swap content (.a3s)
+				vem.parentElement.innerHTML = xhr.responseXML.querySelector('.message div > font > div').innerHTML // swap content (.a3s)
 				savedHash = a = vem = null // prevent memory leak
 			})
 			.catch(function (error) {
 				a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + chrome.i18n.getMessage('clickHere') + ')'
+				console.log(error)
 			})
 		}
 	}
@@ -56,7 +57,7 @@
 	 * @param  	{string}    	href 	URL to fetch
 	 * @return 	{promise}         		Fetch Promise
 	 */
-	ExpandMessage.prototype.request = function (href) {
+	ExpandMessage.prototype.fetch = function (href) {
 		return new Promise(function (resolve, reject) {
 			var xhr = new XMLHttpRequest()
 			xhr.responseType = 'document'
