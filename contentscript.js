@@ -56,9 +56,19 @@
 	 * @param  	{string}    	href 	URL to fetch
 	 * @return 	{promise}         		Fetch Promise
 	 */
-	ExpandMessage.prototype.fetch = function (href) {
-		return window.fetch(href).then(function (response) {
-			return (new window.DOMParser()).parseFromString(response.text(), 'text/xml')
+	ExpandMessage.prototype.request = function (href) {
+		return new Promise(function (resolve, reject) {
+			var xhr = new XMLHttpRequest()
+			xhr.responseType = 'document'
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4) {
+					resolve(xhr)
+				}
+			}
+			xhr.onerror = xhr.onabort = reject
+
+			xhr.open('GET', href, true)
+			xhr.send()
 		})
 	}
 
