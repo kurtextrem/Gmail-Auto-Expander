@@ -30,12 +30,12 @@
 				savedHash = location.hash
 
 			a.href = 'javascript:void'
-			a.textContent = '| ' + chrome.i18n.getMessage('expanding') + '... (' + chrome.i18n.getMessage('clickHere') + ')'
-			a.style.paddingLeft = '2px'
-			a.addEventListener('click', this.request.bind(this, vem.href), false)
+			a.textContent = chrome.i18n.getMessage('expanding') + '... (' + chrome.i18n.getMessage('clickHere') + ')'
+			a.style.paddingLeft = '5px'
+			a.addEventListener('click', this.fetch.bind(this, vem.href), false)
 			vem.parentElement.appendChild(a)
 
-			this.request(vem.href)
+			this.fetch(vem.href)
 			.then(function (xml) {
 				if (location.hash !== savedHash) return // issue #1
 
@@ -43,20 +43,20 @@
 				savedHash = a = vem = null // prevent memory leak
 			})
 			.catch(function (error) {
-				a.textContent += '| ' + chrome.i18n.getMessage('error') + ' (' + chrome.i18n.getMessage('clickHere') + ')'
+				a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + chrome.i18n.getMessage('clickHere') + ')'
 			})
 		}
 	}
 
 	/**
-	 * Requests the given URL.
+	 * Fetches the given URL.
 	 *
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
-	 * @param  	{string}    	href 	URL to request
+	 * @param  	{string}    	href 	URL to fetch
 	 * @return 	{promise}         		Fetch Promise
 	 */
-	ExpandMessage.prototype.request = function (href) {
+	ExpandMessage.prototype.fetch = function (href) {
 		return window.fetch(href).then(function (response) {
 			return (new window.DOMParser()).parseFromString(response.text(), 'text/xml')
 		})
