@@ -22,7 +22,7 @@
 	 * @date   	2015-06-07
 	 */
 	ExpandMessage.prototype.init = function () {
-		if (location.hash.indexOf('inbox/') === -1) return
+		if (location.hash.indexOf('/') === -1) return
 
 		var vem = document.getElementsByClassName('vem')[0]
 		if (vem !== undefined) {
