@@ -81,7 +81,7 @@
 	 */
 	ExpandMessage.prototype.addListener = function () {
 		/** hashchanges */
-		window.addEventListener('popstate', this.init.bind(this), false)
+		window.addEventListener('hashchange', this.init.bind(this), false)
 	}
 
 	new ExpandMessage()
