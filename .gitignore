@@ -1,4 +1,5 @@
 contentscript1.js
 *.crx
 *.pem
-release
+dist
+node_modules
