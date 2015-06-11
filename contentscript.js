@@ -44,7 +44,7 @@
 			})
 			.catch(function (error) {
 				a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + chrome.i18n.getMessage('clickHere') + ')'
-				console.log(error)
+				console.error(error)
 			})
 		}
 	}
