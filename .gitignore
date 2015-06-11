@@ -2,4 +2,5 @@ contentscript1.js
 *.crx
 *.pem
 dist
+dist.zip
 node_modules

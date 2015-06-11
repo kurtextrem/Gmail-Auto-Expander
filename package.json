@@ -12,7 +12,7 @@
 		"js": "uglifyjs -c drop_console=false src/contentscript.js > dist/contentscript.min.js",
 		"json": "json-minify src/manifest.json > dist/manifest.json",
 
-		"copy": "node build.js copyImg",
+		"copy": "node build.js copy",
 
 		"build": "npm run clean & npm run js & npm run json & npm run copy",
 		"postjs": "node build.js replaceJS",

@@ -1,6 +1,7 @@
 /* jshint node: true, devel: true */
 var shell = require('shelljs'),
-	zipdir = require('zip-dir');
+	zipdir = require('zip-dir'),
+	fs = require('fs');
 
 +function () {
 	'use strict'
@@ -16,8 +17,26 @@ var shell = require('shelljs'),
 		}.bind(this))
 	}
 
+	Build.prototype.copy = function () {
+		this.copyLocales()
+		this.copyImg()
+	}
+
+	Build.prototype.copyLocales = function () {
+		fs.readdir('src/_locales', function (err, folder) {
+			if (err) throw err
+
+			folder.forEach(function (name) {
+				if (name !== '.' && name !== '..') {
+					shell.mkdir('-p', 'dist/_locales/' + name)
+					shell.exec('json-minify src/_locales/' + name + '/messages.json > dist/_locales/' + name + '/messages.json')
+				}
+			})
+		})
+	}
+
 	Build.prototype.copyImg = function () {
-		shell.cp('src/*.png', 'dist')
+		shell.cp('-r', 'src/img', 'dist')
 	}
 
 	/** use strict is faster than w/o */
