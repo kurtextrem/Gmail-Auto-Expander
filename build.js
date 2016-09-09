@@ -1,9 +1,9 @@
 /* jshint node: true, devel: true */
 var shell = require('shelljs'),
 	zipdir = require('zip-dir'),
-	fs = require('fs');
+	fs = require('fs')
 
-+function () {
+!function () {
 	'use strict'
 
 	var Build = function () {
@@ -36,12 +36,7 @@ var shell = require('shelljs'),
 	}
 
 	Build.prototype.copyImg = function () {
-		shell.cp('-r', 'src/img', 'dist')
-	}
-
-	/** use strict is faster than w/o */
-	Build.prototype.replaceJS = function () {
-		//shell.sed('-i', '"use strict";', '', 'dist/inject.min.js')
+		shell.cp('src/*.png', 'dist')
 	}
 
 	Build.prototype.replaceJSON = function () {
