@@ -1,4 +1,4 @@
-!function (window) {
+(function (window) {
 	'use strict'
 
 	var document = window.document,
@@ -16,10 +16,12 @@
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
 	 */
-	var ExpandMessage = function () {
+	function ExpandMessage() {
 		this.addListener()
 		// this.init() - see issue #2
 	}
+
+	var proto = ExpandMessage.prototype
 
 	/**
 	 * Handles the expansion of the mail.
@@ -27,7 +29,7 @@
 	 * @author 	Jacob Groß
 	 * @date   	2016-09-09
 	 */
-	ExpandMessage.prototype.init = function () {
+	proto.init = function () {
 		if (location.hash.indexOf('/') === -1) return
 
 		var vem = document.getElementsByClassName('vem')[0]
@@ -66,7 +68,7 @@
 	 * @param  	{string}    	href 	URL to fetch
 	 * @return 	{promise}         		Fetch Promise
 	 */
-	ExpandMessage.prototype.fetch = function (href) {
+	proto.fetch = function (href) {
 		return new Promise(function (resolve, reject) {
 			var xhr = new XMLHttpRequest()
 			xhr.responseType = 'document'
@@ -88,10 +90,10 @@
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
 	 */
-	ExpandMessage.prototype.addListener = function () {
+	proto.addListener = function () {
 		/** hashchanges */
 		window.addEventListener('hashchange', this.init.bind(this), false)
 	}
 
 	new ExpandMessage()
-} (window);
+} (window));
