@@ -1,27 +1,14 @@
-(function (window) {
+;(function(window) {
 	'use strict'
 
-	var document = window.document,
+	const document = window.document,
 		location = window.location
 
 	/** Locales cache */
-	var messages = {
+	const messages = {
 		expanding: chrome.i18n.getMessage('expanding'),
-		clickHere: chrome.i18n.getMessage('clickHere')
+		clickHere: chrome.i18n.getMessage('clickHere'),
 	}
-
-	/**
-	 * The constructor.
-	 *
-	 * @author 	Jacob Groß
-	 * @date   	2015-06-07
-	 */
-	function ExpandMessage() {
-		this.addListener()
-		// this.init() - see issue #2
-	}
-
-	var proto = ExpandMessage.prototype
 
 	/**
 	 * Handles the expansion of the mail.
@@ -29,34 +16,36 @@
 	 * @author 	Jacob Groß
 	 * @date   	2016-09-09
 	 */
-	proto.init = function () {
-		if (location.hash.indexOf('/') === -1) return
+	const label = /#label\/.+\/.+/
+	const inbox = /#(inbox|imp|all)\/.+/
+	function init() {
+		const hash = location.hash
+		if (!label.test(hash) && !inbox.test(hash)) return
 
-		var vem = document.getElementsByClassName('vem')[0]
+		let vem = document.getElementsByClassName('vem')[0]
 		if (vem !== undefined) {
-			var a = document.createElement('a'),
-				savedHash = location.hash
+			let a = document.createElement('a')
 
 			a.href = 'javascript:null'
 			a.textContent = messages.expanding + '... (' + messages.clickHere + ')'
 			a.style.paddingLeft = '5px'
-			a.addEventListener('click', this.fetch.bind(this, vem.href), false)
+			a.addEventListener('click', fetch.bind(this, vem.href), false)
 			vem.parentElement.appendChild(a)
 
-			this.fetch(vem.href)
-			.then(function (xhr) {
-				if (location.hash !== savedHash) return // issue #1
+			fetch(vem.href)
+				.then(function(xhr) {
+					if (location.hash !== hash) return // issue #1
 
-				var elem = xhr.responseXML.querySelector('.message div > font')
-				if (!elem.innerText) return console.warn('empty message', elem.childNodes)
+					var elem = xhr.responseXML.querySelector('.message div > font')
+					if (!elem.innerText) return console.warn('empty message', elem.childNodes)
 
-				vem.parentElement.innerHTML = elem.innerHTML // swap content (.a3s)
-				savedHash = a = vem = null // prevent memory leak
-			})
-			.catch(function (error) {
-				a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + messages.clickHere + ')'
-				console.error(error)
-			})
+					vem.parentElement.innerHTML = elem.innerHTML // swap content (.a3s)
+					hash = a = vem = null // prevent memory leak
+				})
+				.catch(function(error) {
+					a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + messages.clickHere + ')'
+					console.error(error)
+				})
 		}
 	}
 
@@ -65,14 +54,14 @@
 	 *
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
-	 * @param  	{string}    	href 	URL to fetch
-	 * @return 	{promise}         		Fetch Promise
+	 * @param  	{String}    	href 	URL to fetch
+	 * @return 	{Promise}         		Fetch Promise
 	 */
-	proto.fetch = function (href) {
-		return new Promise(function (resolve, reject) {
+	function fetch(href) {
+		return new Promise(function(resolve, reject) {
 			var xhr = new XMLHttpRequest()
 			xhr.responseType = 'document'
-			xhr.onreadystatechange = function () {
+			xhr.onreadystatechange = function() {
 				if (xhr.readyState === 4) {
 					resolve(xhr)
 				}
@@ -90,10 +79,10 @@
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
 	 */
-	proto.addListener = function () {
+	function addListener() {
 		/** hashchanges */
-		window.addEventListener('hashchange', this.init.bind(this), false)
+		window.addEventListener('hashchange', init, false)
 	}
 
-	new ExpandMessage()
-} (window));
+	addListener()
+})(window)
