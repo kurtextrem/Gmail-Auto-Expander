@@ -40,8 +40,8 @@
 	 * @author 	Jacob Groß
 	 * @date   	2016-09-09
 	 */
-	const label = /#label\/.+\/.+/
-	const inbox = /#(inbox|imp|all)\/.+/
+	const label = /#label(?:\/.+){2}/
+	const inbox = /#(inbox|imp|al{2}|search|trash|sent)\/.+/
 	function init() {
 		let hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
