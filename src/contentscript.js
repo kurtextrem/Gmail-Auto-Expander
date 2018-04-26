@@ -27,7 +27,8 @@
 					resolve(xhr)
 				}
 			}
-			xhr.onerror = xhr.onabort = reject
+			xhr.addEventListener('error', reject)
+			xhr.addEventListener('abort', reject)
 
 			xhr.open('GET', href, true)
 			xhr.send()
@@ -46,12 +47,13 @@
 		let hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
 
-		let vem = document.getElementsByClassName('vem')[0]
-		if (vem !== undefined) {
+		let vem = document.getElementsByClassName('vem')
+		vem = vem.length !== 0 ? vem[0] : document.querySelector('.ii.gt > div > div > br + br + a')
+		if (vem !== null) {
 			let a = document.createElement('a')
 
 			a.href = 'javascript:null'
-			a.textContent = messages.expanding + '... (' + messages.clickHere + ')'
+			a.textContent = `${messages.expanding}... (${messages.clickHere})`
 			a.style.paddingLeft = '5px'
 			a.addEventListener('click', fetch.bind(undefined, vem.href), false)
 			vem.parentElement.appendChild(a)
@@ -72,7 +74,7 @@
 					return xhr
 				})
 				.catch(function(error) {
-					a.textContent += ' ― ' + chrome.i18n.getMessage('error') + ' (' + messages.clickHere + ')'
+					a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${messages.clickHere})`
 					console.error(error)
 					hash = a = vem = null // prevent memory leak
 				})
