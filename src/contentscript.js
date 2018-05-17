@@ -16,15 +16,15 @@
 		return new Promise(function(resolve, reject) {
 			const xhr = new XMLHttpRequest()
 			xhr.responseType = 'document'
-			xhr.setRequestHeader('max-stale', '')
 
-			xhr.addEventListener('done', function() {
+			xhr.addEventListener('load', function() {
 				resolve(xhr)
 			})
 			xhr.addEventListener('error', reject)
 			xhr.addEventListener('abort', reject)
 
 			xhr.open('GET', href, true)
+			xhr.setRequestHeader('max-stale', '')
 			xhr.send()
 		})
 	}
@@ -48,6 +48,8 @@
 
 		vem = vem.length > 1 ? vem[1] : vem[0]
 
+		let a = document.createElement('a')
+
 		const href = vem.href
 		hrefToHash.set(href, hash)
 		fetch(href)
@@ -62,23 +64,22 @@
 				}
 
 				document.querySelector('.a3s').innerHTML = elem.innerHTML // swap content (.a3s)
-				hash = vem = elem = null // prevent memory leak
+				a = hash = vem = elem = null // prevent memory leak
 
 				return xhr
 			})
 			.catch(function(error) {
 				a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${messages.clickHere})`
 				console.error(error)
-				hash = vem = null // prevent memory leak
+				a = hash = vem = null // prevent memory leak
+				return error
 			})
 
-		let a = document.createElement('a')
-		a.href = 'javascript:null'
+		a.href = '#'
 		a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
 		a.style.paddingLeft = '5px'
-		a.addEventListener('click', fetch.bind(undefined, vem.href), false)
+		a.addEventListener('click', e => e.preventDefault() && hashChange(), false)
 		vem.parentElement.appendChild(a)
-		a = null
 	}
 
 	/**
