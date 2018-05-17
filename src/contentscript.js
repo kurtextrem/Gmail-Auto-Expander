@@ -4,12 +4,6 @@
 	const document = window.document,
 		location = window.location
 
-	/** Locales cache */
-	const messages = {
-		expanding: chrome.i18n.getMessage('expanding'),
-		clickHere: chrome.i18n.getMessage('clickHere'),
-	}
-
 	/**
 	 * Fetches the given URL; we can't use Fetch here, because it has no support for returning XML/HTML as response.
 	 *
@@ -22,9 +16,11 @@
 		return new Promise(function(resolve, reject) {
 			const xhr = new XMLHttpRequest()
 			xhr.responseType = 'document'
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4) resolve(xhr)
-			}
+			xhr.setRequestHeader('max-stale', '')
+
+			xhr.addEventListener('done', function() {
+				resolve(xhr)
+			})
 			xhr.addEventListener('error', reject)
 			xhr.addEventListener('abort', reject)
 
@@ -41,41 +37,48 @@
 	 */
 	const label = /#label(?:\/.+){2}/
 	const inbox = /#(inbox|imp|al{2}|search|trash|sent)\/.+/
-	function init() {
+	const hrefToHash = new Map()
+	function hashChange() {
 		let hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
 
 		let vem = document.getElementsByClassName('vem')
-		vem = vem.length !== 0 ? vem[0] : document.querySelector('.ii.gt > div > div > br + br + a')
-		if (vem !== null) {
-			fetch(vem.href)
-				.then(function(xhr) {
-					if (location.hash !== hash) return // issue #1
+		if (vem.length === 0) vem = document.querySelectorAll('.ii.gt > div > div > br + br + a')
+		if (vem.length === 0) return
 
-					let elem = xhr.responseXML.querySelector('.message div > font')
-					if (!elem.textContent) {
-						console.warn(elem.childNodes)
-						throw new Error('empty message')
-					}
+		vem = vem.length > 1 ? vem[1] : vem[0]
 
-					document.querySelector('.a3s').innerHTML = elem.innerHTML // swap content (.a3s)
-					hash = a = vem = elem = null // prevent memory leak
+		const href = vem.href
+		hrefToHash.set(href, hash)
+		fetch(href)
+			.then(xhr => {
+				if (hrefToHash.get(href) !== location.hash) return hrefToHash.delete(href) // issue #1
 
-					return xhr
-				})
-				.catch(function(error) {
-					a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${messages.clickHere})`
-					console.error(error)
-					hash = a = vem = null // prevent memory leak
-				})
+				console.log(location.hash, hash, vem, xhr.responseXML)
+				let elem = xhr.responseXML.querySelector('.message div > font')
+				if (!elem.textContent) {
+					console.warn(elem.childNodes)
+					throw new Error('empty message')
+				}
 
-			let a = document.createElement('a')
-			a.href = 'javascript:null'
-			a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
-			a.style.paddingLeft = '5px'
-			a.addEventListener('click', fetch.bind(undefined, vem.href), false)
-			vem.parentElement.appendChild(a)
-		}
+				document.querySelector('.a3s').innerHTML = elem.innerHTML // swap content (.a3s)
+				hash = vem = elem = null // prevent memory leak
+
+				return xhr
+			})
+			.catch(function(error) {
+				a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${messages.clickHere})`
+				console.error(error)
+				hash = vem = null // prevent memory leak
+			})
+
+		let a = document.createElement('a')
+		a.href = 'javascript:null'
+		a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
+		a.style.paddingLeft = '5px'
+		a.addEventListener('click', fetch.bind(undefined, vem.href), false)
+		vem.parentElement.appendChild(a)
+		a = null
 	}
 
 	/**
@@ -86,7 +89,14 @@
 	 */
 	function addListener() {
 		/** hashchanges */
-		window.addEventListener('hashchange', init, false)
+		window.addEventListener(
+			'hashchange',
+			function() {
+				// window.setTimeout(hashChange, 600)
+				window.requestIdleCallback(hashChange)
+			},
+			false
+		)
 	}
 
 	addListener()
