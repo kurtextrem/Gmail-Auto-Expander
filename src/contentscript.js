@@ -41,22 +41,27 @@
 	function hashChange() {
 		let hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
+		console.log(hash)
 
 		let vem = document.getElementsByClassName('vem')
 		if (vem.length === 0) vem = document.querySelectorAll('.ii.gt > div > div > br + br + a')
-		if (vem.length === 0) return
+		const len = vem.length
 
-		vem = vem.length > 1 ? vem[1] : vem[0]
+		if (len === 0) return
+		vem = len > 1 ? vem[len - 1] : vem[0]
 
 		let a = document.createElement('a')
 
-		const href = vem.href
+		const href = vem.href,
+			key = hrefToHash.get(href)
+		if (key !== undefined && key !== hash) return
+
 		hrefToHash.set(href, hash)
 		fetch(href)
 			.then(xhr => {
 				if (hrefToHash.get(href) !== location.hash) return hrefToHash.delete(href) // issue #1
 
-				console.log(location.hash, hash, vem, xhr.responseXML)
+				console.log(vem, xhr.responseXML)
 				let elem = xhr.responseXML.querySelector('.message div > font')
 				if (!elem.textContent) {
 					console.warn(elem.childNodes)
@@ -78,7 +83,7 @@
 		a.href = '#'
 		a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
 		a.style.paddingLeft = '5px'
-		a.addEventListener('click', e => e.preventDefault() && hashChange(), false)
+		a.addEventListener('click', e => hrefToHash.delete(href) && e.preventDefault() && hashChange(), false)
 		vem.parentElement.appendChild(a)
 	}
 
@@ -93,7 +98,6 @@
 		window.addEventListener(
 			'hashchange',
 			function() {
-				// window.setTimeout(hashChange, 600)
 				window.requestIdleCallback(hashChange)
 			},
 			false
