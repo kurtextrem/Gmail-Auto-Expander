@@ -41,18 +41,19 @@
 	function hashChange() {
 		let hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
-		console.log(hash)
 
 		let vem = document.getElementsByClassName('vem')
 		if (vem.length === 0) vem = document.querySelectorAll('.ii.gt > div > div > br + br + a')
 		const len = vem.length
 
 		if (len === 0) return
-		vem = len > 1 ? vem[len - 1] : vem[0]
+
+		let target
+		if (len !== 1) for (let i = 0; i < len; ++i) if (document.body.contains(vem[i])) target = vem[i]
 
 		let a = document.createElement('a')
 
-		const href = vem.href,
+		const href = target.href,
 			key = hrefToHash.get(href)
 		if (key !== undefined && key !== hash) return
 
@@ -61,22 +62,32 @@
 			.then(xhr => {
 				if (hrefToHash.get(href) !== location.hash) return hrefToHash.delete(href) // issue #1
 
-				console.log(vem, xhr.responseXML)
+				console.log(target, xhr.responseXML)
 				let elem = xhr.responseXML.querySelector('.message div > font')
 				if (!elem.textContent) {
 					console.warn(elem.childNodes)
 					throw new Error('empty message')
 				}
 
-				document.querySelector('.a3s').innerHTML = elem.innerHTML // swap content (.a3s)
-				a = hash = vem = elem = null // prevent memory leak
+				window.requestAnimationFrame(() => {
+					let $$ = document.querySelectorAll('.a3s'),
+						$len = $$.length
+					console.log($$)
+					$$[$len > 1 ? $len - 2 : $len - 1].innerHTML = elem.innerHTML // swap content
+					$$ = $len = elem = null
+				})
+
+				vem.length = 0
+				a = hash = vem = target = null // prevent memory leak
 
 				return xhr
 			})
 			.catch(function(error) {
-				a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${messages.clickHere})`
 				console.error(error)
-				a = hash = vem = null // prevent memory leak
+				a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${chrome.i18n.getMessage('clickHere')})`
+
+				vem.length = 0
+				a = hash = vem = target = null // prevent memory leak
 				return error
 			})
 
@@ -84,7 +95,29 @@
 		a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
 		a.style.paddingLeft = '5px'
 		a.addEventListener('click', e => hrefToHash.delete(href) && e.preventDefault() && hashChange(), false)
-		vem.parentElement.appendChild(a)
+		target.parentElement.appendChild(a)
+	}
+
+	let observer
+	function observe() {
+		observer = new MutationObserver(function(mutations) {
+			const hash = document.location.hash
+			if (!label.test(hash) && !inbox.test(hash)) return
+
+			for (let i = 0; i < mutations.length; ++i) {
+				let mutation = mutations[i].target.querySelector('vem')
+				if (mutation.length === 0) mutation = document.querySelectorAll('.ii.gt > div > div > br + br + a')
+				const len = mutation.length
+
+				if (len === 0) return
+
+				if (mutation !== null) window.setTimeout(() => fetchFromElem(mutation), 0)
+			}
+		})
+		observer.observe(document.querySelector('div[id=":5"] + div'), {
+			subtree: true,
+			childList: true,
+		})
 	}
 
 	/**
@@ -95,13 +128,9 @@
 	 */
 	function addListener() {
 		/** hashchanges */
-		window.addEventListener(
-			'hashchange',
-			function() {
-				window.requestIdleCallback(hashChange)
-			},
-			false
-		)
+		window.addEventListener('DOMContentLoaded', function() {
+			if (observer === undefined) observe()
+		})
 	}
 
 	addListener()
