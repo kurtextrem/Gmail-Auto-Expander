@@ -39,20 +39,30 @@
 	const inbox = /#(inbox|imp|al{2}|search|trash|sent)\/.+/
 	const hrefToHash = new Map()
 
-	const fetchFromElemThrottled = throttle(fetchFromElem, 250)
+	const fetchFromElemThrottled = throttle(fetchFromElem, 100)
 
-	function fetchFromElem(target) {
-		let hash = document.location.hash
+	function fetchFromElem(parent, target, oldHash) {
+		let hash = location.hash
+		if (oldHash !== hash) return
+
 		let a = document.createElement('a')
 
-		const href = target.href,
-			key = hrefToHash.get(href)
+		const href = target.href
+		if (href.indexOf('https://mail.google.com/mail/u/') === -1) return
+
+		const key = hrefToHash.get(href)
 		if (key !== undefined && key !== hash) return
 
+		const date = Date.now()
+		console.log(date, 'hash1', hrefToHash.get(href), location.hash)
 		hrefToHash.set(href, hash)
 		fetch(href)
 			.then(xhr => {
-				if (hrefToHash.get(href) !== location.hash) return hrefToHash.delete(href) // If the XHR is returned to late, abort; issue #1
+				console.log(date, 'hash2', hrefToHash.get(href), location.hash)
+				if (hrefToHash.get(href) !== location.hash || oldHash !== location.hash)
+					return console.log('hash doesnt match', hrefToHash.get(href), location.hash) // If the XHR is returned to late, abort; issue #1
+
+				if (!document.body.contains(parent)) parent = document.querySelector('div[id=":5"] + div')
 
 				console.log(xhr.responseXML)
 				let elem = xhr.responseXML.querySelector('.message div > font')
@@ -61,13 +71,9 @@
 					throw new Error('empty message')
 				}
 
-				let $$ = document.querySelectorAll('.a3s'),
-					$len = $$.length
-				console.log($$)
-				$$[$len > 1 ? $len - 2 : $len - 1].innerHTML = elem.innerHTML // swap content
-				$$ = $len = elem = null
-
-				a = hash = null // prevent memory leak
+				let $$ = parent.querySelector('.a3s')
+				$$.innerHTML = elem.innerHTML // swap content
+				$$ = a = hash = null // prevent memory leak
 
 				return xhr
 			})
@@ -87,7 +93,7 @@
 			e => {
 				e.preventDefault()
 				hrefToHash.delete(href)
-				fetchFromElem(target)
+				fetchFromElem(parent, target)
 			},
 			false
 		)
@@ -99,7 +105,7 @@
 		const div = document.querySelector('div[id=":5"] + div')
 		if (div === null) return
 
-		observer = new MutationObserver(throttle(handleMutations, 100))
+		observer = new MutationObserver(handleMutations)
 		observer.observe(div, {
 			subtree: true,
 			childList: true,
@@ -107,20 +113,20 @@
 	}
 
 	function handleMutations(mutations) {
-		const hash = document.location.hash
+		const hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
 
-		console.log('observer')
 		for (let i = 0; i < mutations.length; ++i) {
-			let mutation = mutations[i].target.querySelector('vem')
-			if (mutation === null) mutation = mutations[i].target.querySelector('.ii.gt > div > div > br + br + a')
+			const parent = mutations[i].target
+			let mutation = parent.querySelector('vem')
+			if (mutation === null) mutation = parent.querySelector('.ii.gt > div > div > br + br + a')
 			if (mutation === null) return
 
 			const len = mutation.length
 			if (len === 0) return
-			console.log(mutation)
+			console.log(mutations[i], mutations[i].target, mutation)
 
-			if (mutation !== null) fetchFromElemThrottled(mutation)
+			if (mutation !== null) fetchFromElemThrottled(parent, mutation, hash) //fetchFromElemThrottled(parent, mutation, hash)
 		}
 	}
 
@@ -153,9 +159,12 @@
 	function addListener() {
 		/** hashchanges */
 		window.addEventListener('load', function() {
+			window.setInterval(() => hrefToHash.clear(), 300000)
+		})
+
+		window.addEventListener('hashchange', function() {
 			if (observer !== undefined) observer.disconnect()
 			observe()
-			window.setInterval(() => hrefToHash.clear(), 300000)
 		})
 	}
 
