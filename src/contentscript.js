@@ -9,7 +9,7 @@
 	 *
 	 * @author 	Jacob Groß
 	 * @date   	2015-06-07
-	 * @param  	{String}    	href 	URL to fetch
+	 * @param  	{string}    	href 	URL to fetch
 	 * @return 	{Promise}         		Fetch Promise
 	 */
 	function fetch(href) {
@@ -37,67 +37,71 @@
 	 */
 	const label = /#label(?:\/.+){2}/
 	const inbox = /#(inbox|imp|al{2}|search|trash|sent)\/.+/
-	const hrefToHash = new Map()
+	const fetchMap = new Map()
 
-	const fetchFromElemThrottled = throttle(fetchFromElem, 100)
-
-	function fetchFromElem(parent, target, oldHash) {
-		let hash = location.hash
-		if (oldHash !== hash) return
-
-		let a = document.createElement('a')
-
+	function fetchFromElem(parent, target) {
 		const href = target.href
 		if (href.indexOf('https://mail.google.com/mail/u/') === -1) return
 
-		const key = hrefToHash.get(href)
-		if (key !== undefined && key !== hash) return
+		const maybePromise = fetchMap.get(href)
+		if (maybePromise !== undefined) {
+			maybePromise.then(handleXHR.bind(undefined, parent)).catch(error)
+			fetchMap.delete(href)
+			return
+		}
 
-		const date = Date.now()
-		console.log(date, 'hash1', hrefToHash.get(href), location.hash)
-		hrefToHash.set(href, hash)
-		fetch(href)
-			.then(xhr => {
-				console.log(date, 'hash2', hrefToHash.get(href), location.hash)
-				if (hrefToHash.get(href) !== location.hash || oldHash !== location.hash)
-					return console.log('hash doesnt match', hrefToHash.get(href), location.hash) // If the XHR is returned to late, abort; issue #1
+		let a = document.createElement('a')
 
-				if (!document.body.contains(parent)) parent = document.querySelector('div[id=":5"] + div')
-
-				console.log(xhr.responseXML)
-				let elem = xhr.responseXML.querySelector('.message div > font')
-				if (!elem.textContent) {
-					console.warn(elem.childNodes)
-					throw new Error('empty message')
-				}
-
-				let $$ = parent.querySelector('.a3s')
-				$$.innerHTML = elem.innerHTML // swap content
-				$$ = a = hash = null // prevent memory leak
-
-				return xhr
-			})
+		const promise = fetch(href)
+			.then(handleXHR.bind(undefined, parent))
 			.catch(function(error) {
 				console.error(error)
-				a.textContent += ` ― ${chrome.i18n.getMessage('error')} (${chrome.i18n.getMessage('clickHere')})`
+				a.textContent += ` ― ${chrome.i18n.getMessage(
+					'error'
+				)} (${chrome.i18n.getMessage('clickHere')})`
 
-				a = hash = null // prevent memory leak
+				a = null // prevent memory leak
 				return error
 			})
+		fetchMap.set(href, promise)
 
 		a.href = '#'
-		a.textContent = `${chrome.i18n.getMessage('expanding')}... (${chrome.i18n.getMessage('clickHere')})`
+		a.textContent = `${chrome.i18n.getMessage(
+			'expanding'
+		)}... (${chrome.i18n.getMessage('clickHere')})`
 		a.style.paddingLeft = '5px'
 		a.addEventListener(
 			'click',
 			e => {
 				e.preventDefault()
-				hrefToHash.delete(href)
+				fetchMap.delete(href)
 				fetchFromElem(parent, target)
 			},
 			false
 		)
 		target.parentElement.appendChild(a)
+	}
+
+	function handleXHR(parent, xhr) {
+		/*let pa = parent
+		if (!document.body.contains(pa))
+			pa = document.querySelector('div[id=":5"] + div')*/
+
+		//console.log(xhr.responseXML)
+		const elem = xhr.responseXML.querySelector('.message div > font')
+		if (!elem.textContent) {
+			console.warn(elem.childNodes)
+			throw new Error('empty message')
+		}
+
+		parent.querySelector('.a3s').innerHTML = elem.innerHTML // swap content
+
+		return xhr
+	}
+
+	function error(e) {
+		console.error(e)
+		return e
 	}
 
 	let observer
@@ -118,35 +122,19 @@
 
 		for (let i = 0; i < mutations.length; ++i) {
 			const parent = mutations[i].target
+			if (parent.classList.contains('gmail-em--matched')) return
+
 			let mutation = parent.querySelector('vem')
-			if (mutation === null) mutation = parent.querySelector('.ii.gt > div > div > br + br + a')
+			if (mutation === null)
+				mutation = parent.querySelector('.ii.gt > div > div > br + br + a')
 			if (mutation === null) return
 
 			const len = mutation.length
 			if (len === 0) return
-			console.log(mutations[i], mutations[i].target, mutation)
 
-			if (mutation !== null) fetchFromElemThrottled(parent, mutation, hash) //fetchFromElemThrottled(parent, mutation, hash)
-		}
-	}
-
-	function throttle(callback, wait = 100) {
-		let time
-		let lastFunc
-
-		return function throttle(...args) {
-			if (time === undefined) {
-				callback.apply(this, args)
-				time = Date.now()
-			} else {
-				clearTimeout(lastFunc)
-				lastFunc = setTimeout(() => {
-					if (Date.now() - time >= wait) {
-						callback.apply(this, args)
-						time = Date.now()
-					}
-				}, wait - (Date.now() - time))
-			}
+			//console.log(mutations[i], mutations[i].target, mutation)
+			parent.classList.add('gmail-em--matched')
+			fetchFromElem(parent, mutation)
 		}
 	}
 
