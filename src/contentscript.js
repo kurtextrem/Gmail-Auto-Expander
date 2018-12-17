@@ -83,18 +83,15 @@
 	}
 
 	function handleXHR(parent, xhr) {
-		/*let pa = parent
-		if (!document.body.contains(pa))
-			pa = document.querySelector('div[id=":5"] + div')*/
-
-		//console.log(xhr.responseXML)
 		const elem = xhr.responseXML.querySelector('.message div > font')
 		if (!elem.textContent) {
 			console.warn(elem.childNodes)
 			throw new Error('empty message')
 		}
 
-		parent.querySelector('.a3s').innerHTML = elem.innerHTML // swap content
+		const inner = parent.querySelector('.a3s')
+		inner.innerHTML = elem.innerHTML // swap content
+		inner.classList.add('gmail-em--added')
 
 		return xhr
 	}
@@ -116,26 +113,27 @@
 		})
 	}
 
+	let visited = new WeakSet()
 	function handleMutations(mutations) {
 		const hash = location.hash
 		if (!label.test(hash) && !inbox.test(hash)) return
 
 		for (let i = 0; i < mutations.length; ++i) {
 			const parent = mutations[i].target
-			if (parent.classList.contains('gmail-em--matched')) return
+
+			if (parent.classList.contains('gmail-em--added')) return
 
 			let mutation = parent.querySelector('vem')
 			if (mutation === null)
 				mutation = parent.querySelector('.ii.gt > div > div > br + br + a')
-			if (mutation === null) return
-
-			const len = mutation.length
-			if (len === 0) return
+			if (mutation === null || visited.has(mutation)) return
 
 			//console.log(mutations[i], mutations[i].target, mutation)
-			parent.classList.add('gmail-em--matched')
+			visited.add(mutation)
 			fetchFromElem(parent, mutation)
 		}
+
+		visited = new WeakSet()
 	}
 
 	/**
@@ -148,9 +146,10 @@
 		window.addEventListener('load', function() {
 			if (observer !== undefined) observer.disconnect()
 			observe()
-			window.setInterval(() => {
-				fetchMap.clear()
-			}, 600000)
+		})
+
+		window.addEventListener('hashchange', function() {
+			fetchMap.clear()
 		})
 	}
 
