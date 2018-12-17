@@ -145,14 +145,12 @@
 	 * @date   	2015-06-07
 	 */
 	function addListener() {
-		/** hashchanges */
 		window.addEventListener('load', function() {
-			window.setInterval(() => hrefToHash.clear(), 300000)
-		})
-
-		window.addEventListener('hashchange', function() {
 			if (observer !== undefined) observer.disconnect()
 			observe()
+			window.setInterval(() => {
+				fetchMap.clear()
+			}, 600000)
 		})
 	}
 
