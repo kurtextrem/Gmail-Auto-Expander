@@ -1,6 +1,6 @@
 {
 	"name": "__MSG_extName__",
-	"version": "1.4.1",
+	"version": "1.5.0.1",
 	"manifest_version": 2,
 
 	"description": "__MSG_extDesc__",
@@ -12,6 +12,10 @@
 	},
 	"author": "Jacob „kurtextrem\" Groß",
 
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": false
+	},
 	"content_scripts": [
 		{
 			"matches": ["*://mail.google.com/*"],
