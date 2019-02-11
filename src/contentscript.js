@@ -70,17 +70,12 @@ function handleResponse(parent, text) {
 	const dom = new DOMParser().parseFromString(text, 'text/html')
 	const elem = dom.querySelector('.message div > font')
 	if (!elem.textContent) {
-		console.warn(elem.childNodes)
+		console.warn('childNodes', elem.childNodes)
 		throw new Error('empty message')
 	}
 
-	const inner = parent.querySelector('.a3s')
-	if (inner === null) {
-		console.error(parent, 'a3s is missing')
-		return text
-	}
-	inner.innerHTML = elem.innerHTML // swap content
-	inner.classList.add('gmail-em--added')
+	parent.innerHTML = elem.innerHTML // swap content
+	parent.classList.add('gmail-em--added')
 
 	return text
 }
@@ -113,20 +108,30 @@ function handleMutations(mutations) {
 	const hash = location.hash
 	if (!label.test(hash) && !inbox.test(hash)) return
 
+	let foundOnce = false
 	for (let i = 0; i < mutations.length; ++i) {
-		const parent = mutations[i].target
+		const mutation = mutations[i].target,
+			parent = mutation.querySelector('.a3s')
+
+		if (parent === null) return
+
+		foundOnce = true
 
 		if (parent.classList.contains('gmail-em--added')) return
 
-		let mutation = parent.querySelector('vem')
-		if (mutation === null)
-			mutation = parent.querySelector('.ii.gt > div > div > br + br + a')
-		if (mutation === null || visited.has(mutation)) return
+		let extend = mutation.querySelector('vem')
+		if (extend === null) {
+			extend = mutation.querySelector('.ii.gt > div > div > br + br + a')
+			if (extend === null) return
+		}
+		if (visited.has(parent)) return
 
-		//console.log(mutations[i], mutations[i].target, mutation)
-		visited.add(mutation)
-		fetchFromElem(parent, mutation)
+		//console.log(mutations[i], mutations[i].target, extend)
+		visited.add(parent)
+		fetchFromElem(parent, extend)
 	}
+
+	if (!foundOnce) console.warn('Mail outer parent probably changed')
 }
 
 /**
