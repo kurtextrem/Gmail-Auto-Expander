@@ -1,6 +1,6 @@
 {
 	"name": "__MSG_extName__",
-	"version": "1.5.0.1",
+	"version": "1.5.0.2",
 	"manifest_version": 2,
 
 	"description": "__MSG_extDesc__",
@@ -21,7 +21,7 @@
 			"matches": ["*://mail.google.com/*"],
 			"js": ["contentscript.js"],
 			"run_at": "document_idle",
-			"all_frames": true
+			"all_frames": false
 		}
 	],
 	"minimum_chrome_version": "49",
