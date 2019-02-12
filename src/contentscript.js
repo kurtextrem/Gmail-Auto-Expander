@@ -110,21 +110,24 @@ function handleMutations(mutations) {
 
 	let foundOnce = false
 	for (let i = 0; i < mutations.length; ++i) {
-		const mutation = mutations[i].target,
-			parent = mutation.querySelector('.a3s')
+		const mutation = mutations[i].target
 
-		if (parent === null) return
+		let parent = mutation
+		if (parent.classList.contains('a3s')) parent = mutation
+		else parent = parent.querySelector('.a3s')
+
+		if (parent === null) continue
 
 		foundOnce = true
 
-		if (parent.classList.contains('gmail-em--added')) return
+		if (parent.classList.contains('gmail-em--added')) continue
 
 		let extend = mutation.querySelector('vem')
 		if (extend === null) {
 			extend = mutation.querySelector('.ii.gt > div > div > br + br + a')
-			if (extend === null) return
+			if (extend === null) continue
 		}
-		if (visited.has(parent)) return
+		if (visited.has(parent)) continue
 
 		//console.log(mutations[i], mutations[i].target, extend)
 		visited.add(parent)
