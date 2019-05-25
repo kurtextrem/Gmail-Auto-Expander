@@ -1,6 +1,6 @@
 'use strict'
 
-const opts = {
+const options = {
 	cache: 'force-cache',
 	headers: new Headers({
 		Connection: 'keep-alive',
@@ -8,7 +8,7 @@ const opts = {
 }
 
 function fetchCache(url) {
-	return fetch(url, opts)
+	return fetch(url, options)
 		.then(checkStatus)
 		.then(toText)
 		.catch(error)
@@ -33,10 +33,23 @@ function error(e) {
 	return e
 }
 
+function parse(text) {
+	const dom = new DOMParser().parseFromString(text, 'text/html')
+	const element = dom.querySelector('.message div > font')
+	if (element === null || !element.textContent) {
+		console.warn('childNodes', element.childNodes)
+		throw new Error('empty message')
+	}
+
+	return element.innerHTML
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	fetchCache(
 		'https://mail.google.com/mail/u/0?' + decodeURIComponent(request.path)
-	).then(sendResponse)
+	)
+		.then(parse)
+		.then(sendResponse)
 
 	return true
 })

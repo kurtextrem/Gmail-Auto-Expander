@@ -21,7 +21,7 @@ function fetchFromBackground(path) {
 	})
 }
 
-function fetchFromElem(parent, target) {
+function fetchFromElement(parent, target) {
 	const href = target.href
 	if (target.href.indexOf('https://mail.google.com/') !== 0) return
 
@@ -59,25 +59,22 @@ function fetchFromElem(parent, target) {
 		e => {
 			e.preventDefault()
 			fetchMap.delete(path)
-			fetchFromElem(parent, target)
+			fetchFromElement(parent, target)
 		},
 		false
 	)
 	target.parentElement.append(a)
 }
 
-function handleResponse(parent, text) {
-	const dom = new DOMParser().parseFromString(text, 'text/html')
-	const elem = dom.querySelector('.message div > font')
-	if (!elem.textContent) {
-		console.warn('childNodes', elem.childNodes)
-		throw new Error('empty message')
-	}
+function handleResponse(parent, html) {
+	const hash = document.location.hash
+	if ((!label.test(hash) && !inbox.test(hash)) || parent === undefined || !html)
+		return html
 
-	parent.innerHTML = elem.innerHTML // swap content
+	parent.innerHTML = html // swap content
 	parent.classList.add('gmail-em--added')
 
-	return text
+	return html
 }
 
 function error(e) {
@@ -108,7 +105,7 @@ function handleMutations(mutations) {
 	const hash = location.hash
 	if (!label.test(hash) && !inbox.test(hash)) return
 
-	let foundOnce = false
+	//let foundOnce = false
 	for (let i = 0; i < mutations.length; ++i) {
 		const mutation = mutations[i].target
 
@@ -118,7 +115,7 @@ function handleMutations(mutations) {
 
 		if (parent === null) continue
 
-		foundOnce = true
+		//foundOnce = true
 
 		if (parent.classList.contains('gmail-em--added')) continue
 
@@ -131,10 +128,10 @@ function handleMutations(mutations) {
 
 		//console.log(mutations[i], mutations[i].target, extend)
 		visited.add(parent)
-		fetchFromElem(parent, extend)
+		fetchFromElement(parent, extend)
 	}
 
-	if (!foundOnce) console.warn('Mail outer parent probably changed')
+	//if (!foundOnce) console.warn('Mail outer parent probably changed')
 }
 
 /**
