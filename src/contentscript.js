@@ -10,6 +10,20 @@ const label = /#label(?:\/.+){2}/
 const inbox = /#(inbox|imp|al{2}|search|trash|sent)\/.+/
 const fetchMap = new Map()
 
+/**
+ *
+ */
+function parse(text) {
+	const dom = new DOMParser().parseFromString(text, 'text/html')
+	const element = dom.querySelector('.message div > font')
+	if (element === null || !element.textContent) {
+		console.warn('childNodes', element.childNodes)
+		throw new Error('empty message')
+	}
+
+	return element.innerHTML
+}
+
 function fetchFromBackground(path) {
 	return new Promise((resolve, reject) => {
 		chrome.runtime.sendMessage({ path }, html => {
@@ -37,6 +51,7 @@ function fetchFromElement(parent, target) {
 	let a = document.createElement('a')
 
 	const promise = fetchFromBackground(path)
+		.then(parse)
 		.then(handleResponse.bind(undefined, parent))
 		.catch(function(error) {
 			console.error(error)
